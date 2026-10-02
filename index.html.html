@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KS3 Seed Germination: Advanced Challenge</title>
+    <style>
+        :root {
+            --bg-color: #1a2f1c;
+            --card-bg: #2d4a2f;
+            --accent: #4caf50;
+            --accent-hover: #45a049;
+            --text-color: #f1f8f1;
+            --text-dim: #a3c2a5;
+            --wrong: #e53935;
+            --correct: #43a047;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 750px;
+            width: 100%;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            border: 1px solid #3d633f;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #3d633f;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            margin: 0;
+            color: var(--accent);
+        }
+
+        .stats {
+            font-weight: bold;
+            font-size: 1.1rem;
+            background: #1a2f1c;
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid #3d633f;
+        }
+
+        .question-title {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .question-context {
+            font-size: 0.95rem;
+            color: var(--text-dim);
+            background: rgba(0,0,0,0.2);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background-color: #203822;
+            color: var(--text-color);
+            border: 1px solid #4a754c;
+            padding: 14px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            text-align: left;
+            transition: all 0.2s ease;
+            line-height: 1.3;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background-color: var(--accent-hover);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .option-btn.correct {
+            background-color: var(--correct) !important;
+            border-color: #81c784 !important;
+            color: white;
+        }
+
+        .option-btn.wrong {
+            background-color: var(--wrong) !important;
+            border-color: #e57373 !important;
+            color: white;
+        }
+
+        #explanation {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            display: none;
+            line-height: 1.4;
+        }
+
+        .explanation-correct {
+            background-color: rgba(67, 160, 71, 0.2);
+            border: 1px solid var(--correct);
+        }
+
+        .explanation-wrong {
+            background-color: rgba(229, 57, 53, 0.2);
+            border: 1px solid var(--wrong);
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .next-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: none;
+        }
+
+        .next-btn:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+
+        .data-table th, .data-table td {
+            border: 1px solid #4a754c;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .data-table th {
+            background-color: #1a2f1c;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <div class="header">
+        <h1>🌱 Seed Survival: Advanced Mastery</h1>
+        <div class="stats">
+            <span id="q-progress">Q 1/8</span> | Score: <span id="score">0</span>
+        </div>
+    </div>
+
+    <div id="game-body">
+        <div class="question-title" id="question-text">Loading question...</div>
+        <div id="context-box" class="question-context" style="display:none;"></div>
+        <div class="options-grid" id="options-container"></div>
+        <div id="explanation"></div>
+        <div class="controls">
+            <button class="next-btn" id="next-btn" onclick="nextQuestion()">Next Question ➔</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const quizData = [
+    {
+        q: "How do plants convert absorbed soil nitrates into functional enzymes?",
+        ctx: "Bio-chemistry Pathway Focus",
+        opts: [
+            "Nitrates combine directly with lipids to form structural proteins.",
+            "Nitrates combine with glucose to make amino acids, which polymerise into functional enzymes.",
+            "Nitrates break down starch into glucose, which releases energy to build cell walls.",
+            "Nitrates combine with oxygen during respiration to produce amino acids."
+        ],
+        a: 1,
+        exp: "Nitrates (absorbed from soil) combine with glucose (from photosynthesis or starch breakdown) to synthesize amino acids. Chains of amino acids polymerise to form proteins and enzymes."
+    },
+    {
+        q: "Why can't a seed's embryo use stored starch directly for respiration?",
+        ctx: "Nutrient Processing & Transport",
+        opts: [
+            "Starch is soluble and leaks out of seed tissues easily.",
+            "Starch reacts with oxygen prematurely, causing the seed coat to burst.",
+            "Starch is insoluble and too large to enter embryo cells; amylase must first digest it into soluble maltose/glucose.",
+            "Starch contains no chemical energy until it is converted into lipids."
+        ],
+        a: 2,
+        exp: "Starch is a large, insoluble polysaccharide. It cannot cross cell membranes or travel to growing tissue. Hydrolytic enzymes (like amylase) must break it down into soluble glucose."
+    },
+    {
+        q: "A seed tube is set up with boiled water topped with a layer of vegetable oil at 20°C. What will happen and why?",
+        ctx: "Experimental Controls Laboratory",
+        opts: [
+            "Seeds will germinate because boiled water accelerates water uptake.",
+            "Seeds will fail to germinate because boiling removes dissolved oxygen, and the oil prevents atmospheric oxygen from entering.",
+            "Seeds will germinate because vegetable oil acts as an additional lipid energy source.",
+            "Seeds will fail to germinate because water temperature drops too quickly under oil."
+        ],
+        a: 1,
+        exp: "Germination requires Oxygen for aerobic respiration. Boiling water expels dissolved oxygen, and the floating oil layer stops oxygen from re-entering from the air."
+    },
+    {
+        q: "A student compares seed germination in a dark box at 20°C against a sunny window at 5°C. Why is this experiment invalid?",
+        ctx: "Experimental Design Diagnostics",
+        opts: [
+            "Seeds cannot germinate inside a dark box under any circumstance.",
+            "The experiment alters two independent variables at once (Light and Temperature), making it an unfair test.",
+            "The window provides too much oxygen compared to the box.",
+            "The sample size is too small to calculate a percentage."
+        ],
+        a: 1,
+        exp: "To test the effect of light, temperature must remain constant. Changing both temperature and light exposure simultaneously prevents determining which factor caused the result."
+    },
+    {
+        q: "Review the experimental data below for lettuce seeds over 7 days. Why does germination drop so drastically at 35°C?",
+        ctx: `<table class="data-table">
+                <tr><th>Temperature (°C)</th><th>5°C</th><th>15°C</th><th>25°C</th><th>35°C</th></tr>
+                <tr><th>Germination (%)</th><td>12%</td><td>88%</td><td>94%</td><td>4%</td></tr>
+              </table>`,
+        opts: [
+            "High temperature causes water to evaporate too quickly from the seed coat.",
+            "Enzymes controlling germination denature (active site changes shape) at 35°C, stopping metabolic reactions.",
+            "Respiration stops because oxygen cannot dissolve at temperatures above 30°C.",
+            "Lettuce seeds enter dormancy permanently when exposed to any temperature over 30°C."
+        ],
+        a: 1,
+        exp: "Germination relies on enzyme-controlled metabolic processes. Beyond the optimum temperature (around 25°C), high kinetic energy destroys the shape of the enzyme active site (denaturation), halting growth."
+    },
+    {
+        q: "A seedling is grown in total darkness. Over 10 days, its dry mass continually decreases until it dies. Why?",
+        ctx: "The Dry Mass Paradox",
+        opts: [
+            "Water leaves the seedling via evaporation, lowering its dry mass.",
+            "The seedling uses stored starch/lipids for aerobic respiration, releasing CO2 gas to the air without replacing it via photosynthesis.",
+            "The seedling converts its mass into heat energy, which escapes into the surrounding dark box.",
+            "Cells shrink in size when dark, reducing total physical mass."
+        ],
+        a: 1,
+        exp: "Dry mass measures organic material excluding water. In darkness, photosynthesis cannot occur. The seedling continuously oxidises stored carbon compounds into carbon dioxide gas (respiration), which escapes into the air."
+    },
+    {
+        q: "At what exact point does a young seedling start gaining dry mass?",
+        ctx: "Growth Cycles",
+        opts: [
+            "As soon as the radicle (root) breaks through the seed coat.",
+            "When water is first absorbed through the micropyle.",
+            "When the shoot emerges above ground and green leaves begin photosynthesising faster than the plant respires.",
+            "When the seed coat fully disintegrates in soil."
+        ],
+        a: 2,
+        exp: "Dry mass increases only when carbon gain from photosynthesis exceeds carbon loss from respiration. This requires developed chloroplasts and light exposure."
+    },
+    {
+        q: "Which sequence correctly places the biochemical events of germination in order?",
+        ctx: "Chronological Germination Timeline",
+        opts: [
+            "1. Shoot photosynthesises ➔ 2. Water absorbed ➔ 3. Amylase breaks down starch ➔ 4. Root splits seed coat.",
+            "1. Water absorbed ➔ 2. Amylase digests starch to glucose ➔ 3. Glucose respires for growth ➔ 4. Root ruptures seed coat.",
+            "1. Root splits seed coat ➔ 2. Water absorbed ➔ 3. Starch forms ➔ 4. Shoot grows.",
+            "1. Amylase breaks down starch ➔ 2. Water absorbed ➔ 3. Shoot photosynthesises ➔ 4. Root splits seed coat."
+        ],
+        a: 1,
+        exp: "Imbibition (water uptake) activates metabolic enzymes like amylase. Amylase digests starch to glucose, providing energy via respiration so the radicle (root) can expand and burst through the testa."
+    }
+];
+
+let currentQ = 0;
+let score = 0;
+let answered = false;
+
+function loadQuestion() {
+    answered = false;
+    const qData = quizData[currentQ];
+    
+    document.getElementById('q-progress').innerText = `Q ${currentQ + 1}/${quizData.length}`;
+    document.getElementById('question-text').innerText = qData.q;
+    
+    const ctxBox = document.getElementById('context-box');
+    if (qData.ctx) {
+        ctxBox.innerHTML = qData.ctx;
+        ctxBox.style.display = 'block';
+    } else {
+        ctxBox.style.display = 'none';
+    }
+
+    const optionsContainer = document.getElementById('options-container');
+    optionsContainer.innerHTML = '';
+
+    qData.opts.forEach((optText, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = optText;
+        btn.onclick = () => selectOption(index);
+        optionsContainer.appendChild(btn);
+    });
+
+    document.getElementById('explanation').style.display = 'none';
+    document.getElementById('next-btn').style.display = 'none';
+}
+
+function selectOption(selectedIndex) {
+    if (answered) return;
+    answered = true;
+
+    const qData = quizData[currentQ];
+    const buttons = document.querySelectorAll('.option-btn');
+    const expBox = document.getElementById('explanation');
+
+    buttons.forEach((btn, index) => {
+        btn.disabled = true;
+        if (index === qData.a) {
+            btn.classList.add('correct');
+        } else if (index === selectedIndex) {
+            btn.classList.add('wrong');
+        }
+    });
+
+    if (selectedIndex === qData.a) {
+        score += 150;
+        document.getElementById('score').innerText = score;
+        expBox.className = 'explanation-correct';
+        expBox.innerHTML = `<strong>Correct! 🎉</strong><br>${qData.exp}`;
+    } else {
+        expBox.className = 'explanation-wrong';
+        expBox.innerHTML = `<strong>Incorrect. ❌</strong><br>${qData.exp}`;
+    }
+
+    expBox.style.display = 'block';
+    document.getElementById('next-btn').style.display = 'block';
+}
+
+function nextQuestion() {
+    currentQ++;
+    if (currentQ < quizData.length) {
+        loadQuestion();
+    } else {
+        showFinalResults();
+    }
+}
+
+function showFinalResults() {
+    const gameBody = document.getElementById('game-body');
+    let rank = "";
+    if (score >= 1050) rank = "🌟 Senior Botanist (Mastery Level)";
+    else if (score >= 750) rank = "🌿 Plant Physiologist (High Competency)";
+    else rank = "🌱 Sprouting Scientist (Needs Review)";
+
+    gameBody.innerHTML = `
+        <div style="text-align: center; padding: 20px 0;">
+            <h2>Challenge Completed!</h2>
+            <p style="font-size: 1.3rem;">Final Score: <strong>${score} / ${quizData.length * 150}</strong></p>
+            <p style="font-size: 1.1rem; color: var(--accent); margin-bottom: 25px;">Rank: ${rank}</p>
+            <button class="next-btn" style="display:inline-block;" onclick="location.reload()">Replay Challenge 🔄</button>
+        </div>
+    `;
+}
+
+// Start game
+loadQuestion();
+</script>
+</body>
+</html>
